@@ -1,0 +1,18 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "packageManager": "pnpm@11.1.1",
+  "scripts": {
+    "preinstall": "rm -f package-lock.json yarn.lock",
+    "install:ci": "pnpm install --frozen-lockfile",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --if-present run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "prettier": "^3.8.1"
+  }
+}
