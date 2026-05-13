@@ -5,7 +5,8 @@ import {
 } from "@workspace/api-client-react";
 import { Product } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/hooks/use-language";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,23 +22,25 @@ import { Plus, Pencil, Trash2, Package, Search } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-
-const CATEGORIES = ["Agriculture", "Handicrafts", "Traditional Food", "Textiles", "Natural Products", "Other"];
+import { CATEGORY_LABELS } from "@/i18n/translations";
 
 const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1),
   description: z.string().optional(),
-  price: z.coerce.number().min(0, "Price must be positive"),
-  stock: z.coerce.number().int().min(0, "Stock must be positive"),
-  category: z.string().min(1, "Category is required"),
+  price: z.coerce.number().min(0),
+  stock: z.coerce.number().int().min(0),
+  category: z.string().min(1),
   images: z.string().optional(),
 });
 
 type ProductForm = z.infer<typeof productSchema>;
 
+const CATEGORY_KEYS = ["Agriculture", "Handicrafts", "Traditional Food", "Textiles", "Natural Products", "Other"] as const;
+
 export default function AdminProductsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
   const { data: store } = useGetMyStore();
   const { data: products, isLoading } = useListStoreProducts(store?.id ?? 0, {
     query: { enabled: !!store?.id, queryKey: getListStoreProductsQueryKey(store?.id ?? 0) },
@@ -58,7 +61,7 @@ export default function AdminProductsPage() {
         queryClient.invalidateQueries({ queryKey: getListStoreProductsQueryKey(store?.id ?? 0) });
         setDialogOpen(false);
         form.reset();
-        toast({ title: "Product added successfully" });
+        toast({ title: t("productAdded") });
       },
     },
   });
@@ -70,7 +73,7 @@ export default function AdminProductsPage() {
         setDialogOpen(false);
         setEditingProduct(null);
         form.reset();
-        toast({ title: "Product updated successfully" });
+        toast({ title: t("productUpdated") });
       },
     },
   });
@@ -79,7 +82,7 @@ export default function AdminProductsPage() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListStoreProductsQueryKey(store?.id ?? 0) });
-        toast({ title: "Product deleted" });
+        toast({ title: t("productDeleted") });
       },
     },
   });
@@ -118,20 +121,20 @@ export default function AdminProductsPage() {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Products</h1>
-            <p className="text-muted-foreground text-sm mt-1">{products?.length ?? 0} items in your store</p>
+            <h1 className="text-2xl font-bold text-foreground">{t("productsTitle")}</h1>
+            <p className="text-muted-foreground text-sm mt-1">{products?.length ?? 0} {t("productsSubtitle")}</p>
           </div>
           <Button onClick={openAdd} className="gap-2" data-testid="button-add-product">
             <Plus className="w-4 h-4" />
-            Add Product
+            {t("addProduct")}
           </Button>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            className="pl-9 bg-background"
-            placeholder="Search products..."
+            className="ps-9 bg-background"
+            placeholder={t("searchProducts")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             data-testid="input-search"
@@ -146,10 +149,10 @@ export default function AdminProductsPage() {
           <Card className="border-border">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <Package className="w-12 h-12 text-muted-foreground/40 mb-3" />
-              <p className="text-lg font-medium text-foreground">No products yet</p>
-              <p className="text-muted-foreground text-sm mt-1">Add your first product to start selling</p>
+              <p className="text-lg font-medium text-foreground">{t("noProductsYet")}</p>
+              <p className="text-muted-foreground text-sm mt-1">{t("noProductsSubtitle")}</p>
               <Button className="mt-4 gap-2" onClick={openAdd}>
-                <Plus className="w-4 h-4" /> Add Product
+                <Plus className="w-4 h-4" /> {t("addProduct")}
               </Button>
             </CardContent>
           </Card>
@@ -159,11 +162,11 @@ export default function AdminProductsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Category</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Stock</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("productName")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">{t("category")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("price")}</th>
+                    <th className="text-start px-4 py-3 font-medium text-muted-foreground">{t("stock")}</th>
+                    <th className="text-end px-4 py-3 font-medium text-muted-foreground">{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -179,9 +182,9 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {product.images ? (
-                            <img src={product.images} alt={product.name} className="w-10 h-10 rounded-md object-cover border border-border" />
+                            <img src={product.images} alt={product.name} className="w-10 h-10 rounded-md object-cover border border-border flex-shrink-0" />
                           ) : (
-                            <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
                               <Package className="w-4 h-4 text-muted-foreground" />
                             </div>
                           )}
@@ -189,12 +192,14 @@ export default function AdminProductsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
-                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {CATEGORY_LABELS[product.category]?.[lang] ?? product.category}
+                        </Badge>
                       </td>
                       <td className="px-4 py-3 text-foreground font-medium">JD {product.price.toFixed(2)}</td>
                       <td className="px-4 py-3">
                         <span className={product.stock === 0 ? "text-destructive font-medium" : "text-foreground"}>
-                          {product.stock}
+                          {product.stock === 0 ? t("outOfStock") : product.stock}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -221,24 +226,23 @@ export default function AdminProductsPage() {
           </Card>
         )}
 
-        {/* Add/Edit dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+              <DialogTitle>{editingProduct ? t("editProduct") : t("addNewProduct")}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name</FormLabel>
+                    <FormLabel>{t("productNameLabel")}</FormLabel>
                     <FormControl><Input {...field} data-testid="input-product-name" className="bg-background" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t("description")}</FormLabel>
                     <FormControl><Textarea {...field} rows={3} data-testid="input-product-description" className="bg-background resize-none" /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -246,14 +250,14 @@ export default function AdminProductsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <FormField control={form.control} name="price" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Price (JD)</FormLabel>
+                      <FormLabel>{t("priceJD")}</FormLabel>
                       <FormControl><Input {...field} type="number" step="0.01" min="0" data-testid="input-product-price" className="bg-background" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="stock" render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Stock</FormLabel>
+                      <FormLabel>{t("stock")}</FormLabel>
                       <FormControl><Input {...field} type="number" min="0" data-testid="input-product-stock" className="bg-background" /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -261,15 +265,19 @@ export default function AdminProductsPage() {
                 </div>
                 <FormField control={form.control} name="category" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>{t("category")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-category" className="bg-background">
-                          <SelectValue placeholder="Select category" />
+                          <SelectValue placeholder={t("selectCategory")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CATEGORIES.map((cat) => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        {CATEGORY_KEYS.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {CATEGORY_LABELS[cat]?.[lang] ?? cat}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -277,15 +285,15 @@ export default function AdminProductsPage() {
                 )} />
                 <FormField control={form.control} name="images" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Image URL (optional)</FormLabel>
-                    <FormControl><Input {...field} type="url" placeholder="https://..." data-testid="input-product-images" className="bg-background" /></FormControl>
+                    <FormLabel>{t("imageUrl")}</FormLabel>
+                    <FormControl><Input {...field} type="url" placeholder={t("imageUrlPlaceholder")} data-testid="input-product-images" className="bg-background" /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>{t("cancel")}</Button>
                   <Button type="submit" disabled={createProduct.isPending || updateProduct.isPending} data-testid="button-save-product">
-                    {editingProduct ? "Save Changes" : "Add Product"}
+                    {editingProduct ? t("saveChanges") : t("addProduct")}
                   </Button>
                 </DialogFooter>
               </form>

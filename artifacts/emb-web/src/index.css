@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Cairo:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -221,6 +221,17 @@
   --shadow-xl: 0px 2px 0px 0px rgba(0,0,0,0.2), 0px 8px 10px -1px rgba(0,0,0,0.3);
   --shadow-2xl: 0px 2px 0px 0px rgba(0,0,0,0.2);
 }
+
+/* Arabic / RTL font override — applied when lang="ar" is set on <html> */
+.font-arabic,
+.font-arabic * {
+  font-family: 'Cairo', sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+/* RTL logical property helpers */
+[dir="rtl"] .border-e { border-inline-end-width: 1px; }
+[dir="rtl"] .border-s { border-inline-start-width: 1px; }
 
 @layer base {
   * {

@@ -1,6 +1,7 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { useGetMyStore, useUpdateStore, useCreateStore, getGetMyStoreQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/hooks/use-language";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +17,10 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 
 const schema = z.object({
-  storeName: z.string().min(1, "Store name is required"),
+  storeName: z.string().min(1),
   description: z.string().optional(),
-  location: z.string().min(1, "Location is required"),
-  ruralArea: z.string().min(1, "Rural area is required"),
+  location: z.string().min(1),
+  ruralArea: z.string().min(1),
   contactInfo: z.string().optional(),
   logo: z.string().optional(),
 });
@@ -29,6 +30,7 @@ type FormData = z.infer<typeof schema>;
 export default function AdminStorePage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { data: store, isLoading } = useGetMyStore();
 
   const form = useForm<FormData>({
@@ -53,7 +55,7 @@ export default function AdminStorePage() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetMyStoreQueryKey() });
-        toast({ title: "Store updated successfully" });
+        toast({ title: t("storeUpdated") });
       },
     },
   });
@@ -62,7 +64,7 @@ export default function AdminStorePage() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetMyStoreQueryKey() });
-        toast({ title: "Store created!" });
+        toast({ title: t("storeCreated") });
       },
     },
   });
@@ -79,8 +81,8 @@ export default function AdminStorePage() {
     <AdminLayout>
       <div className="p-6 max-w-2xl space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Store Profile</h1>
-          <p className="text-muted-foreground text-sm mt-1">{store ? "Manage your store information" : "Set up your store to start selling"}</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("storeTitle")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{store ? t("storeSubtitle") : t("storeSetupSubtitle")}</p>
         </div>
 
         {isLoading ? (
@@ -91,13 +93,12 @@ export default function AdminStorePage() {
           </Card>
         ) : (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            {/* Store preview */}
             {store && (
               <Card className="border-border mb-6 overflow-hidden">
                 <div className="h-24 bg-gradient-to-r from-primary/20 to-primary/10" />
                 <CardContent className="-mt-10 pb-5">
                   <div className="flex items-end gap-4">
-                    <div className="w-16 h-16 rounded-xl border-2 border-background bg-muted flex items-center justify-center overflow-hidden shadow-md">
+                    <div className="w-16 h-16 rounded-xl border-2 border-background bg-muted flex items-center justify-center overflow-hidden shadow-md flex-shrink-0">
                       {store.logo ? (
                         <img src={store.logo} alt={store.storeName} className="w-full h-full object-cover" />
                       ) : (
@@ -107,7 +108,7 @@ export default function AdminStorePage() {
                     <div className="pb-1">
                       <h3 className="font-bold text-foreground text-lg">{store.storeName}</h3>
                       <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                        <MapPin className="w-3 h-3" />
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
                         <span>{store.location}, {store.ruralArea}</span>
                       </div>
                     </div>
@@ -118,59 +119,59 @@ export default function AdminStorePage() {
 
             <Card className="border-border">
               <CardHeader>
-                <CardTitle className="text-base">{store ? "Edit Store" : "Create Your Store"}</CardTitle>
-                <CardDescription>This information will be visible to buyers in the marketplace</CardDescription>
+                <CardTitle className="text-base">{store ? t("editStore") : t("createStore")}</CardTitle>
+                <CardDescription>{t("storeVisibilityNote")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
                     <FormField control={form.control} name="storeName" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2"><Store className="w-3.5 h-3.5" />Store Name</FormLabel>
-                        <FormControl><Input {...field} placeholder="Al-Baraka Natural Products" data-testid="input-store-name" className="bg-background" /></FormControl>
+                        <FormLabel className="flex items-center gap-2"><Store className="w-3.5 h-3.5" />{t("storeName")}</FormLabel>
+                        <FormControl><Input {...field} placeholder={t("storeNamePlaceholder")} data-testid="input-store-name" className="bg-background" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                     <FormField control={form.control} name="description" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl><Textarea {...field} rows={3} placeholder="Tell buyers about your store and products..." className="bg-background resize-none" /></FormControl>
+                        <FormLabel>{t("description")}</FormLabel>
+                        <FormControl><Textarea {...field} rows={3} placeholder={t("descriptionPlaceholder")} className="bg-background resize-none" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                     <div className="grid grid-cols-2 gap-4">
                       <FormField control={form.control} name="location" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" />City/Region</FormLabel>
-                          <FormControl><Input {...field} placeholder="Azraq" data-testid="input-location" className="bg-background" /></FormControl>
+                          <FormLabel className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5" />{t("cityRegion")}</FormLabel>
+                          <FormControl><Input {...field} placeholder={t("cityPlaceholder")} data-testid="input-location" className="bg-background" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="ruralArea" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Rural Area</FormLabel>
-                          <FormControl><Input {...field} placeholder="Badia" data-testid="input-rural-area" className="bg-background" /></FormControl>
+                          <FormLabel>{t("ruralArea")}</FormLabel>
+                          <FormControl><Input {...field} placeholder={t("ruralAreaPlaceholder")} data-testid="input-rural-area" className="bg-background" /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                     </div>
                     <FormField control={form.control} name="contactInfo" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" />Contact Info</FormLabel>
-                        <FormControl><Input {...field} placeholder="+962 7X XXX XXXX" className="bg-background" /></FormControl>
-                        <FormDescription>Phone number or WhatsApp for buyers</FormDescription>
+                        <FormLabel className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" />{t("contactInfo")}</FormLabel>
+                        <FormControl><Input {...field} placeholder={t("contactPlaceholder")} className="bg-background" /></FormControl>
+                        <FormDescription>{t("contactHint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )} />
                     <FormField control={form.control} name="logo" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />Logo URL (optional)</FormLabel>
+                        <FormLabel className="flex items-center gap-2"><Image className="w-3.5 h-3.5" />{t("logoUrl")}</FormLabel>
                         <FormControl><Input {...field} type="url" placeholder="https://..." className="bg-background" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                     <Button type="submit" disabled={updateStore.isPending || createStore.isPending} data-testid="button-save-store">
-                      {store ? "Save Changes" : "Create Store"}
+                      {store ? t("saveChanges") : t("createStoreBtn")}
                     </Button>
                   </form>
                 </Form>

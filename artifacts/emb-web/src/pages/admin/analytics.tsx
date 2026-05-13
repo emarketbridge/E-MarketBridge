@@ -1,5 +1,6 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { useGetSalesByMonth, useGetTopProducts, useGetDashboardStats } from "@workspace/api-client-react";
+import { useLanguage } from "@/hooks/use-language";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -12,26 +13,26 @@ export default function AdminAnalyticsPage() {
   const { data: salesByMonth, isLoading: salesLoading } = useGetSalesByMonth();
   const { data: topProducts, isLoading: topLoading } = useGetTopProducts();
   const { data: stats } = useGetDashboardStats();
+  const { t } = useLanguage();
 
   return (
     <AdminLayout>
       <div className="p-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
-          <p className="text-muted-foreground text-sm mt-1">Track your store's performance</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("analyticsTitle")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("analyticsSubtitle")}</p>
         </div>
 
-        {/* Summary row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: "Total Revenue", value: stats ? `JD ${stats.totalRevenue.toFixed(2)}` : null, icon: DollarSign },
-            { label: "Orders Completed", value: stats?.totalSales, icon: TrendingUp },
-            { label: "Active Products", value: stats?.totalProducts, icon: Award },
+            { label: t("totalRevenue"), value: stats ? `JD ${stats.totalRevenue.toFixed(2)}` : null, icon: DollarSign },
+            { label: t("ordersCompleted"), value: stats?.totalSales, icon: TrendingUp },
+            { label: t("activeProducts"), value: stats?.totalProducts, icon: Award },
           ].map((card) => (
             <Card key={card.label} className="border-border">
               <CardContent className="pt-5 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-primary/10">
+                  <div className="p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
                     <card.icon className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -48,12 +49,11 @@ export default function AdminAnalyticsPage() {
           ))}
         </div>
 
-        {/* Revenue chart */}
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
-              Revenue & Orders by Month
+              {t("revenueOrders")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -68,24 +68,23 @@ export default function AdminAnalyticsPage() {
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="revenue" name="Revenue (JD)" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line yAxisId="right" type="monotone" dataKey="sales" name="Orders" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line yAxisId="left" type="monotone" dataKey="revenue" name={t("revenueJD")} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="sales" name={t("ordersCompleted")} stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
-                No sales data yet. Make a few sales to see your analytics.
+                {t("noAnalyticsData")}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Top products chart */}
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Award className="w-4 h-4 text-primary" />
-              Top Selling Products
+              {t("topSelling")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -98,12 +97,12 @@ export default function AdminAnalyticsPage() {
                   <XAxis type="number" tick={{ fontSize: 11 }} />
                   <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                  <Bar dataKey="totalSold" name="Units Sold" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="totalSold" name={t("unitsSold")} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">
-                No product sales data yet
+                {t("noProductSales")}
               </div>
             )}
           </CardContent>

@@ -2,6 +2,7 @@ import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useListFeaturedProducts, useListStores } from "@workspace/api-client-react";
 import { Product } from "@workspace/api-client-react";
 import { useCart } from "@/hooks/use-cart";
+import { useLanguage } from "@/hooks/use-language";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,19 +11,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Package, ShoppingCart, ChevronRight, Wheat, Scissors, UtensilsCrossed, Shirt, Leaf, Grid3X3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { CATEGORY_LABELS } from "@/i18n/translations";
 
 const CATEGORIES = [
-  { name: "Agriculture", icon: Wheat, color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  { name: "Handicrafts", icon: Scissors, color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" },
-  { name: "Traditional Food", icon: UtensilsCrossed, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
-  { name: "Textiles", icon: Shirt, color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  { name: "Natural Products", icon: Leaf, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
-  { name: "Other", icon: Grid3X3, color: "bg-muted text-muted-foreground" },
-];
+  { key: "Agriculture",      icon: Wheat,           color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  { key: "Handicrafts",      icon: Scissors,        color: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400" },
+  { key: "Traditional Food", icon: UtensilsCrossed, color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" },
+  { key: "Textiles",         icon: Shirt,           color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  { key: "Natural Products", icon: Leaf,            color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  { key: "Other",            icon: Grid3X3,         color: "bg-muted text-muted-foreground" },
+] as const;
 
 function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
 
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
@@ -35,7 +38,9 @@ function ProductCard({ product }: { product: Product }) {
               <Package className="w-10 h-10 text-muted-foreground/40" />
             </div>
           )}
-          <Badge className="absolute top-2 left-2 text-xs" variant="secondary">{product.category}</Badge>
+          <Badge className="absolute top-2 start-2 text-xs" variant="secondary">
+            {CATEGORY_LABELS[product.category]?.[lang] ?? product.category}
+          </Badge>
         </div>
         <CardContent className="p-4">
           <Link href={`/marketplace/products/${product.id}`} className="block font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
@@ -52,12 +57,12 @@ function ProductCard({ product }: { product: Product }) {
               disabled={product.stock === 0}
               onClick={() => {
                 addToCart(product);
-                toast({ title: `${product.name} added to cart` });
+                toast({ title: `${product.name} ${t("addedToCart")}` });
               }}
               data-testid={`button-add-to-cart-${product.id}`}
             >
               <ShoppingCart className="h-3.5 w-3.5" />
-              {product.stock === 0 ? "Out of stock" : "Add"}
+              {product.stock === 0 ? t("outOfStock") : t("addToCart")}
             </Button>
           </div>
         </CardContent>
@@ -69,6 +74,7 @@ function ProductCard({ product }: { product: Product }) {
 export default function MarketplacePage() {
   const { data: featuredProducts, isLoading } = useListFeaturedProducts();
   const { data: stores } = useListStores();
+  const { t, lang } = useLanguage();
 
   return (
     <MarketplaceLayout>
@@ -82,24 +88,24 @@ export default function MarketplacePage() {
             className="max-w-2xl"
           >
             <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
-              Jordan's Rural Marketplace
+              {t("ruralMarketplace")}
             </Badge>
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground leading-tight">
-              Discover Authentic Products from
-              <span className="text-primary"> Rural Jordan</span>
+              {t("heroTitle")}
+              <span className="text-primary"> {t("heroHighlight")}</span>
             </h1>
             <p className="mt-4 text-lg text-muted-foreground max-w-lg">
-              Support small businesses from Badia, Azraq, and villages across Jordan. Fresh produce, handmade crafts, and traditional foods — direct from the source.
+              {t("heroDesc")}
             </p>
             <div className="mt-8 flex flex-wrap gap-3 items-center">
               <Link href="/marketplace/products">
                 <Button size="lg" className="gap-2" data-testid="button-shop-now">
-                  Shop Now
+                  {t("shopNow")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
               <p className="text-sm text-muted-foreground">
-                {stores?.length ?? 0} stores · {featuredProducts?.length ?? 0} products
+                {stores?.length ?? 0} {t("storesCount")} · {featuredProducts?.length ?? 0} {t("products")}
               </p>
             </div>
           </motion.div>
@@ -108,26 +114,26 @@ export default function MarketplacePage() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground">Shop by Category</h2>
+          <h2 className="text-xl font-bold text-foreground">{t("shopByCategory")}</h2>
           <Link href="/marketplace/products" className="text-sm text-primary hover:underline flex items-center gap-1">
-            Browse all <ChevronRight className="h-3 w-3" />
+            {t("browseAll")} <ChevronRight className="h-3 w-3" />
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {CATEGORIES.map((cat, i) => (
             <motion.div
-              key={cat.name}
+              key={cat.key}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.06 }}
             >
               <Link
-                href={`/marketplace/products?category=${encodeURIComponent(cat.name)}`}
+                href={`/marketplace/products?category=${encodeURIComponent(cat.key)}`}
                 className={`block rounded-xl p-4 text-center cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 border border-border ${cat.color}`}
-                data-testid={`category-${cat.name.toLowerCase().replace(/ /g, "-")}`}
+                data-testid={`category-${cat.key.toLowerCase().replace(/ /g, "-")}`}
               >
                 <cat.icon className="w-7 h-7 mx-auto mb-2" />
-                <p className="text-xs font-medium">{cat.name}</p>
+                <p className="text-xs font-medium">{CATEGORY_LABELS[cat.key]?.[lang] ?? cat.key}</p>
               </Link>
             </motion.div>
           ))}
@@ -136,9 +142,9 @@ export default function MarketplacePage() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-foreground">Featured Products</h2>
+          <h2 className="text-xl font-bold text-foreground">{t("featuredProducts")}</h2>
           <Link href="/marketplace/products" className="text-sm text-primary hover:underline flex items-center gap-1">
-            View all <ChevronRight className="h-3 w-3" />
+            {t("viewAllProducts")} <ChevronRight className="h-3 w-3" />
           </Link>
         </div>
         {isLoading ? (
@@ -165,8 +171,8 @@ export default function MarketplacePage() {
         ) : (
           <div className="text-center py-16 text-muted-foreground">
             <Package className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p className="font-medium">No products available yet</p>
-            <p className="text-sm mt-1">Check back soon as sellers add their products</p>
+            <p className="font-medium">{t("noProductsAvailable")}</p>
+            <p className="text-sm mt-1">{t("noProductsAvailableSubtitle")}</p>
           </div>
         )}
       </section>

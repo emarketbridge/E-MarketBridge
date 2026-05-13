@@ -2,7 +2,8 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useCart } from "@/hooks/use-cart";
-import { ShoppingCart, Sun, Moon, User, LogOut, ChevronDown, Store } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
+import { ShoppingCart, Sun, Moon, User, LogOut, ChevronDown, Store, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,18 +15,19 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { href: "/marketplace", label: "Home" },
-  { href: "/marketplace/products", label: "Shop" },
-  { href: "/marketplace/orders", label: "My Orders" },
-];
-
 export function MarketplaceLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const { cartItems } = useCart();
+  const { t, lang, setLang } = useLanguage();
   const [location] = useLocation();
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const navLinks = [
+    { href: "/marketplace", label: t("home") },
+    { href: "/marketplace/products", label: t("shop") },
+    { href: "/marketplace/orders", label: t("myOrders") },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -33,10 +35,10 @@ export function MarketplaceLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/marketplace" className="flex items-center gap-2 font-bold text-lg text-foreground" data-testid="link-home">
-              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
                 <Store className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span>e-MarketBridge</span>
+              <span>{t("appName")}</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -56,7 +58,18 @@ export function MarketplaceLayout({ children }: { children: React.ReactNode }) {
               ))}
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground hover:text-foreground px-2"
+                onClick={() => setLang(lang === "en" ? "ar" : "en")}
+                title={t("language")}
+              >
+                <Languages className="h-4 w-4" />
+                <span className="text-xs font-semibold">{lang === "en" ? "ع" : "EN"}</span>
+              </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -89,12 +102,12 @@ export function MarketplaceLayout({ children }: { children: React.ReactNode }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link href="/marketplace/orders" data-testid="menu-my-orders">My Orders</Link>
+                    <Link href="/marketplace/orders" data-testid="menu-my-orders">{t("myOrders")}</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="text-destructive" data-testid="menu-logout">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
+                    <LogOut className="h-4 w-4 me-2" />
+                    {t("logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -111,13 +124,13 @@ export function MarketplaceLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
+              <div className="w-6 h-6 rounded bg-primary flex items-center justify-center flex-shrink-0">
                 <Store className="w-3 h-3 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-foreground text-sm">e-MarketBridge</span>
+              <span className="font-semibold text-foreground text-sm">{t("appName")}</span>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Empowering rural businesses in Jordan — connecting communities, one sale at a time.
+              {t("footerTagline")}
             </p>
           </div>
         </div>

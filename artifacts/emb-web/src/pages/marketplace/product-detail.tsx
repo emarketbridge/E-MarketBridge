@@ -1,6 +1,7 @@
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useGetProduct, useGetStore, getGetProductQueryKey, getGetStoreQueryKey } from "@workspace/api-client-react";
 import { useCart } from "@/hooks/use-cart";
+import { useLanguage } from "@/hooks/use-language";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { Package, ShoppingCart, Store, MapPin, ChevronLeft, Plus, Minus } from "
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { CATEGORY_LABELS } from "@/i18n/translations";
 
 export default function ProductDetailPage({ id }: { id: number }) {
   const { data: product, isLoading } = useGetProduct(id, {
@@ -19,6 +21,7 @@ export default function ProductDetailPage({ id }: { id: number }) {
   });
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
   const [qty, setQty] = useState(1);
 
   if (isLoading) {
@@ -42,9 +45,9 @@ export default function ProductDetailPage({ id }: { id: number }) {
       <MarketplaceLayout>
         <div className="max-w-5xl mx-auto px-4 py-20 text-center text-muted-foreground">
           <Package className="w-12 h-12 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Product not found</p>
+          <p className="font-medium">{t("productNotFound")}</p>
           <Link href="/marketplace/products">
-            <Button variant="outline" className="mt-4">Back to products</Button>
+            <Button variant="outline" className="mt-4">{t("backToProducts")}</Button>
           </Link>
         </div>
       </MarketplaceLayout>
@@ -56,7 +59,7 @@ export default function ProductDetailPage({ id }: { id: number }) {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/marketplace/products" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6 w-fit">
           <ChevronLeft className="h-4 w-4" />
-          Back to products
+          {t("backToProducts")}
         </Link>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -74,7 +77,9 @@ export default function ProductDetailPage({ id }: { id: number }) {
 
           <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
             <div>
-              <Badge variant="secondary" className="mb-2">{product.category}</Badge>
+              <Badge variant="secondary" className="mb-2">
+                {CATEGORY_LABELS[product.category]?.[lang] ?? product.category}
+              </Badge>
               <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
               {product.storeName && (
                 <p className="text-muted-foreground text-sm mt-1">by {product.storeName}</p>
@@ -89,14 +94,14 @@ export default function ProductDetailPage({ id }: { id: number }) {
 
             <div className="flex items-center gap-2 text-sm">
               <span className={product.stock > 0 ? "text-emerald-600 font-medium" : "text-destructive font-medium"}>
-                {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                {product.stock > 0 ? `${product.stock} ${t("inStock")}` : t("outOfStock")}
               </span>
             </div>
 
             {product.stock > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-foreground">Quantity</span>
+                  <span className="text-sm font-medium text-foreground">{t("quantity")}</span>
                   <div className="flex items-center gap-2 border border-border rounded-lg overflow-hidden">
                     <button className="p-2 hover:bg-muted transition-colors" onClick={() => setQty(Math.max(1, qty - 1))} data-testid="button-qty-minus">
                       <Minus className="h-4 w-4" />
@@ -112,22 +117,22 @@ export default function ProductDetailPage({ id }: { id: number }) {
                   className="w-full gap-2"
                   onClick={() => {
                     for (let i = 0; i < qty; i++) addToCart(product);
-                    toast({ title: `${qty}x ${product.name} added to cart` });
+                    toast({ title: `${qty}x ${product.name} ${t("addedToCartQty")}` });
                   }}
                   data-testid="button-add-to-cart"
                 >
                   <ShoppingCart className="h-5 w-5" />
-                  Add to Cart
+                  {t("addToCartLong")}
                 </Button>
                 <Link href="/marketplace/cart">
-                  <Button variant="outline" size="lg" className="w-full">View Cart</Button>
+                  <Button variant="outline" size="lg" className="w-full">{t("viewCart")}</Button>
                 </Link>
               </div>
             )}
 
             {store && (
               <div className="border border-border rounded-xl p-4 bg-muted/30">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 font-semibold">Sold by</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 font-semibold">{t("soldBy")}</p>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-lg bg-muted border border-border flex items-center justify-center overflow-hidden flex-shrink-0">
                     {store.logo ? (

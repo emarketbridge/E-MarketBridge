@@ -1,8 +1,8 @@
 import { AdminLayout } from "@/components/admin-layout";
 import { useListOrders, useUpdateOrderStatus, getListOrdersQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/hooks/use-language";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
@@ -10,6 +10,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { STATUS_LABELS } from "@/i18n/translations";
 
 const STATUS_OPTIONS = ["pending", "processing", "shipped", "delivered", "cancelled"] as const;
 
@@ -24,6 +25,7 @@ const statusColor: Record<string, string> = {
 export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t, lang } = useLanguage();
   const { data: orders, isLoading } = useListOrders();
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
@@ -31,7 +33,7 @@ export default function AdminOrdersPage() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
-        toast({ title: "Order status updated" });
+        toast({ title: t("orderStatusUpdated") });
       },
     },
   });
@@ -40,8 +42,8 @@ export default function AdminOrdersPage() {
     <AdminLayout>
       <div className="p-6 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Orders</h1>
-          <p className="text-muted-foreground text-sm mt-1">{orders?.length ?? 0} total orders</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("ordersTitle")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{orders?.length ?? 0} {t("totalOrdersCount")}</p>
         </div>
 
         {isLoading ? (
@@ -52,8 +54,8 @@ export default function AdminOrdersPage() {
           <Card className="border-border">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <ShoppingBag className="w-12 h-12 text-muted-foreground/40 mb-3" />
-              <p className="text-lg font-medium text-foreground">No orders yet</p>
-              <p className="text-muted-foreground text-sm mt-1">Orders from buyers will appear here</p>
+              <p className="text-lg font-medium text-foreground">{t("noOrdersYet")}</p>
+              <p className="text-muted-foreground text-sm mt-1">{t("noOrdersSubtitle")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -68,21 +70,23 @@ export default function AdminOrdersPage() {
                 <Card className="border-border overflow-hidden" data-testid={`order-card-${order.id}`}>
                   <CardContent className="p-0">
                     <button
-                      className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-muted/30 transition-colors"
+                      className="w-full flex items-center gap-4 px-4 py-4 text-start hover:bg-muted/30 transition-colors"
                       onClick={() => setExpandedOrderId(expandedOrderId === order.id ? null : order.id)}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
-                          <p className="font-semibold text-foreground">Order #{order.id}</p>
+                          <p className="font-semibold text-foreground">
+                            {lang === "ar" ? `طلب #${order.id}` : `Order #${order.id}`}
+                          </p>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[order.status] ?? ""}`}>
-                            {order.status}
+                            {STATUS_LABELS[order.status]?.[lang] ?? order.status}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-0.5">
-                          {order.buyerName ?? "Customer"} · {format(new Date(order.createdAt), "MMM d, yyyy")}
+                          {order.buyerName ?? t("customer")} · {format(new Date(order.createdAt), "MMM d, yyyy")}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-shrink-0">
                         <p className="font-bold text-foreground">JD {order.totalAmount.toFixed(2)}</p>
                         {expandedOrderId === order.id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                       </div>
@@ -92,16 +96,15 @@ export default function AdminOrdersPage() {
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
                         className="border-t border-border px-4 py-4 space-y-4"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Items</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">{t("items")}</p>
                             <div className="space-y-1">
                               {order.items?.map((item) => (
                                 <div key={item.id} className="flex justify-between text-sm">
-                                  <span className="text-foreground">{item.productName ?? `Product #${item.productId}`} x{item.quantity}</span>
+                                  <span className="text-foreground">{item.productName ?? `#${item.productId}`} x{item.quantity}</span>
                                   <span className="text-muted-foreground">JD {(item.price * item.quantity).toFixed(2)}</span>
                                 </div>
                               ))}
@@ -109,11 +112,11 @@ export default function AdminOrdersPage() {
                           </div>
                           <div className="space-y-2">
                             <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Shipping Address</p>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t("shippingAddress")}</p>
                               <p className="text-sm text-foreground">{order.shippingAddress}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Update Status</p>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">{t("updateStatus")}</p>
                               <Select
                                 value={order.status}
                                 onValueChange={(value) => updateStatus.mutate({ id: order.id, data: { status: value as typeof STATUS_OPTIONS[number] } })}
@@ -122,7 +125,11 @@ export default function AdminOrdersPage() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {STATUS_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
+                                  {STATUS_OPTIONS.map((s) => (
+                                    <SelectItem key={s} value={s}>
+                                      {STATUS_LABELS[s]?.[lang] ?? s}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </div>

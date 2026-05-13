@@ -1,5 +1,6 @@
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useCart } from "@/hooks/use-cart";
+import { useLanguage } from "@/hooks/use-language";
 import { useCreateOrder, useProcessPayment } from "@workspace/api-client-react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
@@ -16,7 +17,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 const schema = z.object({
-  shippingAddress: z.string().min(5, "Please enter a full shipping address"),
+  shippingAddress: z.string().min(5),
   paymentMethod: z.enum(["cash_on_delivery", "card"]),
   cardNumber: z.string().optional(),
   cardExpiry: z.string().optional(),
@@ -30,6 +31,7 @@ export default function CheckoutPage() {
   const [, setLocation] = useLocation();
   const [orderComplete, setOrderComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -52,11 +54,11 @@ export default function CheckoutPage() {
               setOrderComplete(true);
               setTimeout(() => setLocation("/marketplace/orders"), 2500);
             },
-            onError: () => setError("Payment processing failed. Please try again."),
+            onError: () => setError(t("paymentFailed")),
           }
         );
       },
-      onError: () => setError("Order creation failed. Please try again."),
+      onError: () => setError(t("orderCreationFailed")),
     },
   });
 
@@ -80,8 +82,8 @@ export default function CheckoutPage() {
             <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground">Order Confirmed!</h2>
-            <p className="text-muted-foreground">Your order has been placed successfully. Redirecting to your orders...</p>
+            <h2 className="text-2xl font-bold text-foreground">{t("orderConfirmed")}</h2>
+            <p className="text-muted-foreground">{t("orderConfirmedSubtitle")}</p>
           </motion.div>
         </div>
       </MarketplaceLayout>
@@ -93,9 +95,9 @@ export default function CheckoutPage() {
       <MarketplaceLayout>
         <div className="max-w-md mx-auto px-4 py-20 text-center">
           <Package className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
-          <p className="font-medium text-foreground">Your cart is empty</p>
+          <p className="font-medium text-foreground">{t("cartEmptyCheckout")}</p>
           <Link href="/marketplace/products">
-            <Button className="mt-4">Shop Now</Button>
+            <Button className="mt-4">{t("shopNow")}</Button>
           </Link>
         </div>
       </MarketplaceLayout>
@@ -107,9 +109,9 @@ export default function CheckoutPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Link href="/marketplace/cart" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ChevronLeft className="h-4 w-4" />
-          Back to cart
+          {t("backToCart")}
         </Link>
-        <h1 className="text-2xl font-bold text-foreground mb-6">Checkout</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-6">{t("checkoutTitle")}</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3 space-y-5">
@@ -119,17 +121,17 @@ export default function CheckoutPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Truck className="w-4 h-4 text-primary" />
-                      Shipping Address
+                      {t("shippingAddress")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <FormField control={form.control} name="shippingAddress" render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Address</FormLabel>
+                        <FormLabel>{t("fullAddress")}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Street, City, Governorate, Jordan" data-testid="input-shipping-address" className="bg-background" />
+                          <Input {...field} placeholder={t("addressPlaceholder")} data-testid="input-shipping-address" className="bg-background" />
                         </FormControl>
-                        <FormDescription>Enter your full shipping address in Jordan</FormDescription>
+                        <FormDescription>{t("addressHint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -140,7 +142,7 @@ export default function CheckoutPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <CreditCard className="w-4 h-4 text-primary" />
-                      Payment Method
+                      {t("paymentMethod")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -155,9 +157,9 @@ export default function CheckoutPage() {
                               <RadioGroupItem value="cash_on_delivery" id="cod" className="mt-0.5" />
                               <div>
                                 <Label htmlFor="cod" className="font-medium cursor-pointer flex items-center gap-2">
-                                  <Truck className="w-4 h-4" /> Cash on Delivery
+                                  <Truck className="w-4 h-4" /> {t("cashOnDelivery")}
                                 </Label>
-                                <p className="text-xs text-muted-foreground mt-1">Pay when your order arrives. Available across rural Jordan.</p>
+                                <p className="text-xs text-muted-foreground mt-1">{t("cashOnDeliveryDesc")}</p>
                               </div>
                             </div>
                             <div
@@ -167,9 +169,9 @@ export default function CheckoutPage() {
                               <RadioGroupItem value="card" id="card" className="mt-0.5" />
                               <div className="flex-1">
                                 <Label htmlFor="card" className="font-medium cursor-pointer flex items-center gap-2">
-                                  <CreditCard className="w-4 h-4" /> Card Payment
+                                  <CreditCard className="w-4 h-4" /> {t("cardPayment")}
                                 </Label>
-                                <p className="text-xs text-muted-foreground mt-1">Test mode — simulated gateway. No real payment processed.</p>
+                                <p className="text-xs text-muted-foreground mt-1">{t("cardPaymentDesc")}</p>
                               </div>
                             </div>
                           </RadioGroup>
@@ -182,25 +184,25 @@ export default function CheckoutPage() {
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3 pt-2">
                         <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md p-2.5">
                           <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                          <span>Test mode: Enter any values. No real payment is processed.</span>
+                          <span>{t("testModeNote")}</span>
                         </div>
                         <FormField control={form.control} name="cardNumber" render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Card Number</FormLabel>
-                            <FormControl><Input {...field} placeholder="4242 4242 4242 4242" data-testid="input-card-number" className="bg-background" /></FormControl>
+                            <FormLabel>{t("cardNumber")}</FormLabel>
+                            <FormControl><Input {...field} placeholder={t("cardNumberPlaceholder")} data-testid="input-card-number" className="bg-background" /></FormControl>
                           </FormItem>
                         )} />
                         <div className="grid grid-cols-2 gap-3">
                           <FormField control={form.control} name="cardExpiry" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Expiry</FormLabel>
-                              <FormControl><Input {...field} placeholder="MM/YY" data-testid="input-card-expiry" className="bg-background" /></FormControl>
+                              <FormLabel>{t("expiry")}</FormLabel>
+                              <FormControl><Input {...field} placeholder={t("expiryPlaceholder")} data-testid="input-card-expiry" className="bg-background" /></FormControl>
                             </FormItem>
                           )} />
                           <FormField control={form.control} name="cardCvv" render={({ field }) => (
                             <FormItem>
-                              <FormLabel>CVV</FormLabel>
-                              <FormControl><Input {...field} placeholder="123" data-testid="input-card-cvv" className="bg-background" /></FormControl>
+                              <FormLabel>{t("cvv")}</FormLabel>
+                              <FormControl><Input {...field} placeholder={t("cvvPlaceholder")} data-testid="input-card-cvv" className="bg-background" /></FormControl>
                             </FormItem>
                           )} />
                         </div>
@@ -223,7 +225,9 @@ export default function CheckoutPage() {
                   disabled={createOrder.isPending || processPayment.isPending}
                   data-testid="button-place-order"
                 >
-                  {createOrder.isPending || processPayment.isPending ? "Processing..." : `Place Order · JD ${total.toFixed(2)}`}
+                  {createOrder.isPending || processPayment.isPending
+                    ? t("processing")
+                    : `${t("placeOrder")} · JD ${total.toFixed(2)}`}
                 </Button>
               </form>
             </Form>
@@ -232,19 +236,19 @@ export default function CheckoutPage() {
           <div className="lg:col-span-2">
             <Card className="border-border sticky top-20">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Order Summary</CardTitle>
-                <CardDescription>{cartItems.length} items</CardDescription>
+                <CardTitle className="text-base">{t("orderSummary")}</CardTitle>
+                <CardDescription>{cartItems.length} {t("itemsPlural")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {cartItems.map((item) => (
                   <div key={item.productId} className="flex justify-between text-sm" data-testid={`summary-item-${item.productId}`}>
                     <span className="text-muted-foreground line-clamp-1 flex-1">{item.name} x{item.quantity}</span>
-                    <span className="font-medium text-foreground ml-2">JD {(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-medium text-foreground ms-2">JD {(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
                 <div className="border-t border-border pt-3">
                   <div className="flex justify-between font-bold">
-                    <span className="text-foreground">Total</span>
+                    <span className="text-foreground">{t("total")}</span>
                     <span className="text-primary text-lg" data-testid="text-order-total">JD {total.toFixed(2)}</span>
                   </div>
                 </div>
